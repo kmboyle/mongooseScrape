@@ -4,14 +4,107 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cheerio = require("cheerio");
 const request = require("request");
+const Article = require("./models/Article");
+const Comments = require("./models/Comments");
+mongoose.Promise = Promise;
 
 var app = express();
 
 var PORT = process.env.PORT || 3000;
 
+//app.use(logger("dev"));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.engine('handlebars', exphbs({ defaultLayout: "main" }));
-app.set('view engine', 'handlebars');
+//app.engine('handlebars', exphbs({ defaultLayout: "main" }));
+//app.set('view engine', 'handlebars');
+
+app.use(express.static("public"));
+
+// Database configuration with mongoose
+mongoose.connect("mongodb://localhost/mongooseScrape");
+var db = mongoose.connection;
+
+// Show any mongoose errors
+db.on("error", function(error) {
+    console.log("Mongoose Error: ", error);
+});
+
+// Once logged in to the db through mongoose, log a success message
+db.once("open", function() {
+    console.log("Mongoose connection successful.");
+});
+
+app.get("/", function(req, res) {
+    console.log("hello");
+    Article.find({}, function(err, article) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(article);
+            res.json(article);
+        }
+    });
+});
+
+app.get("/scrape", function(req, res) {
+
+    request("http://www.charlotteobserver.com/news/", function(error, response, html) {
+        var $ = cheerio.load(html);
+        var results = {};
+
+        $("#story-list").children("article").each(function(i, element) {
+
+            results.link = $(element).find(".title a").attr("href");
+            results.title = $(element).find(".title a").text();
+            results.summary = $(element).find(".summary").text();
+            results.img = $(element).find("img").text();
+            console.log(`title: ${results.title}
+                link: ${results.link}
+                img: ${results.img}
+                summary: ${results.summary}`);
+            var article = new Article(results);
+            article.save(function(err, entry) {
+                if (err) {
+                    console.log(err);
+                } else
+                    console.log(entry);
+
+            });
+
+        });
+    });
+});
+
+app.get("/articles", function(req, res) {
+    Article.find({}, function(err, entry) {
+        if (err) {
+            res.send(err);
+        } else {
+            res.send(entry);
+        }
+
+    })
+});
+//get an article by its id and show the comments associated to it
+app.get("/articles/:id", function(req, res) {
+    Article.findOne({ _id: req.params.id })
+        .populate("Comments")
+        .exec(function(err, entry) {
+            if (err) {
+                res.send(err);
+            } else {
+                console.log(entry);
+                res.send(entry);
+            }
+        });
+});
+//this will create a new comment or replace an existing one
+app.post("/articles/:id", function(req, res) {
+    console.log("post req.body");
+    console.log(req.body);
+
+    console.log('post req.params.id');
+    console.log(req.params.id);
+})
 
 app.listen(PORT, function() {
 
