@@ -87,7 +87,7 @@ app.get("/articles", function(req, res) {
 //get an article by its id and show the comments associated to it
 app.get("/articles/:id", function(req, res) {
     Article.findOne({ _id: req.params.id })
-        .populate("Comments")
+        .populate("comment")
         .exec(function(err, entry) {
             if (err) {
                 res.send(err);
@@ -104,7 +104,57 @@ app.post("/articles/:id", function(req, res) {
 
     console.log('post req.params.id');
     console.log(req.params.id);
-})
+
+    var newComment = new Comments(req.body);
+    console.log('post new comment');
+    console.log(newComment);
+
+    //saving new comment to mongoose
+    newComment.save(function(err, com) {
+        if (err) {
+            res.send(err);
+        } else {
+            Article.findOneAndUpdate({
+                    _id: req.params.id
+                }, {
+                    $push: {
+                        "comment": newComment._id
+                    }
+                },
+                function(err, newCom) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.send(newCom);
+                    }
+                });
+        }
+    });
+});
+
+// Delete One from the DB
+app.get("/delete/:id", function(req, res) {
+    // Remove a note using the objectID
+    console.log("deleted id");
+    console.log(req.params.id);
+    Comments.remove({
+        _id: req.params.id
+    }, function(error, removed) {
+        // Log any errors from mongojs
+        if (error) {
+            console.log(error);
+            res.send(error);
+        }
+        // Otherwise, send the mongojs response to the browser
+        // This will fire off the success function of the ajax request
+        else {
+            console.log(removed);
+            res.send(removed);
+        }
+    });
+});
+
+
 
 app.listen(PORT, function() {
 

@@ -2,12 +2,12 @@ $.getJSON("/articles", function(data) {
     console.log("Hi-ya");
     $(".article-container").empty();
     for (var i = 0; i < 20; i++) {
-        $(".article-container").append(
+        $(".article-container").prepend(
             '<div class = "panel panel-primary panel-article" data-id="' + data[i]._id + '">' +
             '<div class= "panel-title">' +
             "<a href= '" + data[i].link +
             "'><h3>" + data[i].title +
-            "</h3></a><div class = 'btn btn-success save'> Save Article</div>" + '<div class = "panel-body"><h5>' +
+            "</h3></a><div class = 'btn btn-success save'> Add Comment</div>" + '<div class = "panel-body"><h5>' +
             data[i].summary +
             "</h5></div>" + "</div>");
     }
@@ -16,7 +16,6 @@ $(document).ready(function() {
 
     $(".scrape-new").on("click", function() {
         console.log("hi");
-        $(".article-container").empty();
         $.ajax({
                 method: "GET",
                 url: "/scrape"
@@ -31,16 +30,16 @@ $(document).ready(function() {
 
     //get the article by id and show a comment section to user
     $(".panel-article").on("click", function() {
-        console.log(this);
         var articleId = $(this).attr("data-id");
-        console.log(articleId);
+        $("#comments-panel").show();
+        $("#comments").empty();
         $.ajax({
             method: "GET",
             url: "/articles/" + articleId
         }).done(function(data) {
             console.log(data);
-            $("#comments-panel").show();
-            $("#comments-new").empty();
+            $("#comment-title").html(data.title);
+            $("#comment-new").empty();
             $("#comment-new").append('<div class="row">' +
                 '<div class="col-xs-12"><div class="form-group">' +
                 '<label for="bodyinput" class="col-lg-2 control-label">' +
@@ -51,29 +50,55 @@ $(document).ready(function() {
 
 
 
-            if (data.comments) {
+            if (data.comment) {
                 // Place the body of the note in the body textarea
-                for (var i = 0; i < data.comments.length; i++) {
-                    $("#comments").append('<li>- ' + data.comments[i].body + '</li>');
+                for (var i = 0; i < data.comment.length; i++) {
+                    console.log(data.comment);
+                    $("#comments").prepend('<li data-id=' + data.comment[i]._id + '>-- ' + data.comment[i].body + '   <span class= "btn btn-warning deleter">  X</span></li>');
                 }
             }
         });
     });
 
 
-    $("#savenote").on("click", function() {
+    $(document).on("click", "#savenote", function() {
         var articleId = $(this).attr("data-id");
         console.log("test");
         $.ajax({
             method: "POST",
             url: "/articles/" + articleId,
             data: {
-                body: $("#bodyinput").val()
+                body: $("#bodyinput").val(),
+                created: Date.now()
             }
-        }).done(function(data) {
-            console.log(data);
-        });
-        $("#comments").append("<li>- " + ("#bodyinput").val() + "</li>");
+        }).done(function(data) {});
+        $("#comments").prepend("<li>- " + $("#bodyinput").val() + "</li>");
         $("#bodyinput").val("");
     });
+
+
+    // When user clicks the deleter button for a note
+    $(document).on("click", ".deleter", function() {
+
+        var selected = $(this).parent();
+        // Make an AJAX GET request to delete the specific comment
+        // this uses the data-id of the div-tag, which is linked to the specific comment
+        console.log(selected.attr("data-id"));
+
+        $.ajax({
+            type: "GET",
+            url: "/delete/" + selected.attr("data-id"),
+
+            // On successful call
+            success: function(response) {
+                // Remove the div-tag from the DOM
+                selected.remove();
+                // Clear the comment
+                $("li data-id").val("");
+            }
+        });
+    });
+    $(".close").on("click", function() {
+        $("#comments-panel").hide();
+    })
 });
