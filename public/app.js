@@ -1,7 +1,7 @@
 $.getJSON("/articles", function(data) {
-    console.log("Hi-ya");
     $(".article-container").empty();
-    for (var i = 0; i < 20; i++) {
+    console.log(data);
+    for (var i = 0; i < data.length; i++) {
         $(".article-container").prepend(
             '<div class = "panel panel-primary panel-article" data-id="' + data[i]._id + '">' +
             '<div class= "panel-title">' +
@@ -15,7 +15,6 @@ $.getJSON("/articles", function(data) {
 $(document).ready(function() {
 
     $(".scrape-new").on("click", function() {
-        console.log("hi");
         $.ajax({
                 method: "GET",
                 url: "/scrape"
@@ -37,7 +36,7 @@ $(document).ready(function() {
             method: "GET",
             url: "/articles/" + articleId
         }).done(function(data) {
-            console.log(data);
+            //building the comment section form
             $("#comment-title").html(data.title);
             $("#comment-new").empty();
             $("#comment-new").append('<div class="row">' +
@@ -49,7 +48,7 @@ $(document).ready(function() {
                 'data-id=' + data._id + ' id="savenote">Save</div></div></div></div></div>');
 
 
-
+            //rendering comment list
             if (data.comment) {
                 // Place the body of the note in the body textarea
                 for (var i = 0; i < data.comment.length; i++) {
@@ -63,7 +62,6 @@ $(document).ready(function() {
 
     $(document).on("click", "#savenote", function() {
         var articleId = $(this).attr("data-id");
-        console.log("test");
         $.ajax({
             method: "POST",
             url: "/articles/" + articleId,
@@ -72,6 +70,7 @@ $(document).ready(function() {
                 created: Date.now()
             }
         }).done(function(data) {});
+        //add comment and clear form box (but not populating data-id and x to delete)
         $("#comments").prepend("<li>- " + $("#bodyinput").val() + "</li>");
         $("#bodyinput").val("");
     });

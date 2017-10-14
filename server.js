@@ -21,6 +21,7 @@ app.use(express.static("public"));
 
 // Database configuration with mongoose
 mongoose.connect("mongodb://heroku_rvjxzkrf:4iofaih5q1dhab568no5jt13uu@ds041526.mlab.com:41526/heroku_rvjxzkrf");
+//localhost/mongooseScrape
 var db = mongoose.connection;
 
 // Show any mongoose errors
@@ -33,17 +34,17 @@ db.once("open", function() {
     console.log("Mongoose connection successful.");
 });
 
-app.get("/", function(req, res) {
-    console.log("hello");
-    Article.find({}, function(err, article) {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log(article);
-            res.json(article);
-        }
-    });
-});
+// app.get("/", function(req, res) {
+//     console.log("hello");
+//     Article.find({}, function(err, article) {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             console.log(article);
+//             res.json(article);
+//         }
+//     });
+// });
 
 app.get("/scrape", function(req, res) {
 
