@@ -21,7 +21,10 @@ app.use(express.static("public"));
 
 // Database configuration with mongoose
 mongoose.connect("mongodb://heroku_rvjxzkrf:4iofaih5q1dhab568no5jt13uu@ds041526.mlab.com:41526/heroku_rvjxzkrf");
-//localhost/mongooseScrape
+
+//localhost/mongooseScrape");
+
+
 var db = mongoose.connection;
 
 // Show any mongoose errors
@@ -57,19 +60,18 @@ app.get("/scrape", function(req, res) {
             results.link = $(element).find(".title a").attr("href");
             results.title = $(element).find(".title a").text();
             results.summary = $(element).find(".summary").text();
-            results.img = $(element).find("img").text();
+            results.img = $(element).find(".media-object").attr("src");
             console.log(`title: ${results.title}
                 link: ${results.link}
                 img: ${results.img}
                 summary: ${results.summary}`);
             var article = new Article(results);
-            article.save(function(err, entry) {
-                if (err) {
-                    console.log(err);
-                } else
-                    console.log(entry);
+            // article.save(function(err, entry) {
+            //     if (err) {
+            //         console.log(err);
+            //     } else {}
 
-            });
+            // });
 
         });
     });
@@ -150,6 +152,26 @@ app.get("/delete/:id", function(req, res) {
         // This will fire off the success function of the ajax request
         else {
             console.log(removed);
+            res.send(removed);
+        }
+    });
+});
+
+app.get("/deleteArticle/:id", function(req, res) {
+    // Remove a note using the objectID
+    console.log("deleted id");
+    console.log(req.params.id);
+    Article.remove({
+        _id: req.params.id
+    }, function(error, removed) {
+        // Log any errors from mongojs
+        if (error) {
+
+            res.send(error);
+        }
+        // Otherwise, send the mongojs response to the browser
+        // This will fire off the success function of the ajax request
+        else {
             res.send(removed);
         }
     });

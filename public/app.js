@@ -4,6 +4,8 @@ $.getJSON("/articles", function(data) {
     for (var i = 0; i < data.length; i++) {
         $(".article-container").prepend(
             '<div class = "panel panel-primary panel-article" data-id="' + data[i]._id + '">' +
+            ' <button type="button" style="float: right" class="btn-danger deleteArticle" aria-label="Close">' +
+            '<span aria-hidden="true">&times;</span>' + '</button>' +
             '<div class= "panel-title">' +
             "<a href= '" + data[i].link +
             "'><h3>" + data[i].title +
@@ -21,7 +23,19 @@ $(document).ready(function() {
             })
             .done(function(data) {
                 console.log("done");
-                location.href = "/";
+                for (var i = 0; i < data.length; i++) {
+                    $(".article-container").prepend(
+                        '<div class = "panel panel-primary panel-article" data-id="' + data[i]._id + '">' +
+                        ' <button type="button" style="float: right" class="btn-danger deleteArticle" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span>' + '</button>' +
+                        '<div class= "panel-title">' +
+                        "<a href= '" + data[i].link +
+                        "'><h3>" + data[i].title +
+                        "</h3></a><div class = 'btn btn-success save'> Add Comment</div>" + '<div class = "panel-body"><h5>' +
+                        data[i].summary +
+                        "</h5></div>" + "</div>");
+                }
+                location.href = "/articles";
             })
 
     });
@@ -99,5 +113,25 @@ $(document).ready(function() {
     });
     $(".close").on("click", function() {
         $("#comments-panel").hide();
+    })
+
+    $(".deleteArticle").on("click", function() {
+        var selected = $(this).parent();
+
+        console.log(selected.attr("data-id"));
+
+        $.ajax({
+            type: "GET",
+            url: "/deleteArticle/" + selected.attr("data-id"),
+
+            // On successful call
+            success: function(response) {
+                // Remove the div-tag from the DOM
+                selected.remove();
+                // Clear the article element
+                $("#panel-title").hide();
+            }
+        });
+
     })
 });
